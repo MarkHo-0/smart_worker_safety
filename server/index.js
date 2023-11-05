@@ -1,13 +1,17 @@
 import http from "http";
+import { Bonjour } from 'bonjour-service'
 import { WebSocketServer } from "ws";
 import { UserMode } from "./constant.js";
-import { getManager } from "./modules/manager/db.js";
+import { createRandomData, getManager } from "./modules/manager/db.js";
 import { getWorker } from "./modules/worker/db.js";
 import { onWorkerMessage } from "./modules/worker/index.js";
 import { onManagerMessage } from "./modules/manager/index.js";
 
+const PORT = 8080
+
 const server = http.createServer();
 const wss = new WebSocketServer({ noServer: true });
+const mdns = new Bonjour().publish({ name: "Smart Worker Safety Server", host: "sws_s", type: "ws", port: PORT });
 
 server.on("upgrade", async (req, socket, head) => {
   const params = new URL(req.url, `http://${req.headers.host}`).searchParams;
@@ -29,8 +33,9 @@ server.on("upgrade", async (req, socket, head) => {
     return;
   }
   req.identity = identity;
+  console.log("設備連入，身份為：" + JSON.stringify(identity));
 
-  //升級為ws協議
+  //升級為ws協議  
   wss.handleUpgrade(req, socket, head, (ws) => {
     wss.emit("connection", ws, req);
   });
@@ -41,6 +46,14 @@ wss.on("connection", (ws, request) => {
   wss.clients.add(ws);
 
   ws.on("message", (data) => {
+    if (data instanceof Buffer) {
+      data = Buffer.from(data).toString();
+    }
+
+    if (data instanceof String) {
+      data = JSON.parse(data);
+    }
+
     if (ws.identity.supervisorID > 0) {
       onWorkerMessage(ws.identity, data);
     } else {
@@ -55,4 +68,4 @@ wss.on("connection", (ws, request) => {
   });
 });
 
-server.listen(8080);
+server.listen(PORT);
