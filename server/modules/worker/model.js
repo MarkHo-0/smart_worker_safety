@@ -4,6 +4,7 @@ export class WorkerCondition {
   bodyTemperature = 0;
   envTemperature = 0;
   startTimeMS = 0;
+  withHelmet = false;
 }
 
 export class WorkerBio {

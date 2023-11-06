@@ -1,38 +1,68 @@
+import { WebSocketServer } from "ws";
 import {
   isAtRestingSites,
   wifiSignalData2Location,
 } from "../wifi_signal/index.js";
-import { requestHelp, revokeHelp } from "./help.js";
+import { requestHelp } from "./help.js";
 import { Worker, WorkerStatus } from "./model.js";
+import { clearConditionData, getWorkerAndInit } from "./db.js";
+import { getIncompleteInteraction } from "../../utils/incomplete_interaction.js";
 
-/**
- *
- * @param {Worker} worker
- * @param {Object} rawData
- */
-export function onWorkerMessage(worker = {}, rawData) {
-  switch (rawData.event) {
-    case "wifi_signal_changed":
-      const newLocation = wifiSignalData2Location(rawData.data);
-      if (newLocation == worker.condition.location) return;
-      mayChangeWorkerStatus(worker, newLocation);
-      break;
+const workerServer = new WebSocketServer({
+  noServer: true,
+  clientTracking: true,
+});
 
-    case "update_temperature":
-      break;
+let modifiedWorkerIDList = [];
 
-    case "request_help":
-      requestHelp(worker, rawData.data);
-      break;
+workerServer.on("connection", async (client, req) => {
+  const identity = await getWorkerAndInit(req.unverifiedID);
+  if (!identity) return client.close();
+  client.identity = identity;
 
-    case "revoke_help":
-      revokeHelp(worker);
-      break;
+  client.on("message", (eventable) => {
+    if (eventable instanceof Buffer) {
+      eventable = eventable.toJSON();
+    }
 
-    default:
-  }
-}
+    switch (eventable.event) {
+      case "wifi_signal_changed":
+        const newLocation = wifiSignalData2Location(eventable.data);
+        if (newLocation == identity.condition.location) return;
+        mayChangeWorkerStatus(identity, newLocation);
+        break;
 
+      case "temperature_updated":
+        identity.condition.bodyTemperature = eventable.data["body"];
+        identity.condition.envTemperature = eventable.data["env"];
+        break;
+
+      case "helmet_state_updated":
+        identity.condition.withHelmet = Boolean(eventable.data);
+        break;
+
+      case "reply_condition":
+        const conditionReqeust = getIncompleteInteraction(
+          "request_condition",
+          undefined,
+          identity.bio.id
+        );
+        if (conditionReqeust == undefined) return;
+        conditionReqeust.complete(eventable.data);
+        break;
+
+      case "request_help":
+        requestHelp(identity, eventable.data);
+        break;
+
+      default:
+    }
+  });
+
+  client.once("close", (code) => {
+    clearConditionData(identity.bio.id);
+  });
+});
 /**
  * @param {Worker} worker
  * @param {String} newLocation
@@ -50,4 +80,4 @@ function mayChangeWorkerStatus(worker, newLocation) {
   return false;
 }
 
-export { getWorker } from "./db.js";
+export { workerServer };

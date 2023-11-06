@@ -1,26 +1,52 @@
+import { WebSocketServer } from "ws";
 import { getWorkersByManager } from "../worker/db.js";
 import { getManager } from "./db.js";
-import { Manager } from "./model.js";
+import { IncompleteInteraction } from "../../utils/incomplete_interaction.js";
 
-/**
- *
- * @param {Manager} manager
- * @param {*} data
- */
-export function onManagerMessage(manager, data = {}) {
-  switch (data.event) {
-    case "get_workers":
-      const worker = getWorkersByManager(manager.id);
-      break;
-    case "reminder":
-      break;
-    case "call_to_office":
-      break;
-    case "request_condition":
-      break;
-    default:
-      break;
-  }
-}
+const managerServer = new WebSocketServer({
+  noServer: true,
+  clientTracking: true,
+});
 
-export { getManager };
+managerServer.on("connection", async (client, _) => {
+  const identity = await getManager(req.unverifiedID);
+  if (!identity) return client.close();
+  client.identity = identity;
+
+  client.on("message", (eventable) => {
+    if (eventable instanceof String) {
+      eventable = JSON.parse(eventable);
+    }
+
+    switch (eventable.event) {
+      case "get_workers":
+        getWorkersByManager(identity.id).then((workers) =>
+          client.send({ wokers_data_changed: workers })
+        );
+        break;
+
+      case "reminder":
+        break;
+      case "call_to_office":
+        break;
+      case "request_condition":
+        const targetID = parseInt(eventable.data["to"]);
+        const request = new IncompleteInteraction(
+          "request_condition",
+          identity.id,
+          targetID
+        );
+        request.setOnComplete((worker_condition) => {
+          client.send({ from: targetID, reply_condition: worker_condition });
+        });
+        request.setOnTimeOut(10, () => {
+          client.send({ from: targetID, reply_condition: null });
+        });
+        break;
+      default:
+        break;
+    }
+  });
+});
+
+export { managerServer };

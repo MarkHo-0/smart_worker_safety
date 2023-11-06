@@ -1,16 +1,6 @@
-import { WorkerCommnication } from "./commnication.js";
-
-const helpList = new Map();
-
-/**
- * @description 工友發送援助請求
- * @param {WorkerCommnication} commnication
- * @param {HelpContent} data
- * @returns
- */
-export function requestHelp(commnication, helpType) {
+export function requestHelp(worker, detail) {
   const taskID = setTimeout(
-    () => commnication.sendToManager(data.type),
+    () => commnication.sendToManager(helpType),
     data.delaySecond * 1000
   );
   helpList.push(taskID);
@@ -18,10 +8,6 @@ export function requestHelp(commnication, helpType) {
 
 export function revokeHelp(worker = {}) {
   clearTimeout();
-}
-
-function sendHelp(fromWorker = {}, reasonID = 0) {
-  return true;
 }
 
 /**

@@ -1,9 +1,7 @@
 export class Manager {
-  id = 0;
-  name = "";
-
-  constructor(id = 0, name = "") {
-    this.id = id;
-    this.name = name;
+  constructor(id, name) {
+    /** @type {Number} */ this.id = id;
+    /** @type {String} */ this.name = name;
+    /** @type {String} */ this.fcmToken = "";
   }
 }
