@@ -26,6 +26,7 @@ class WorkerCondition extends ChangeNotifier {
   double bodyTemperature = 0;
   double envTemperature = 0;
   int startTimeMS = 0;
+  bool withHelmet = false;
 
   WorkerCondition({
     required this.location,
@@ -33,6 +34,7 @@ class WorkerCondition extends ChangeNotifier {
     required this.envTemperature,
     required this.status,
     required this.startTimeMS,
+    required this.withHelmet,
   });
 
   factory WorkerCondition.random() {
@@ -43,6 +45,7 @@ class WorkerCondition extends ChangeNotifier {
       envTemperature: random.nextDouble() * 10 + 25,
       status: WorkerStatus.values[random.nextInt(3)],
       startTimeMS: currentTime - random.nextInt(1000 * 60 * 60 * 5),
+      withHelmet: random.nextBool(),
     );
   }
 }

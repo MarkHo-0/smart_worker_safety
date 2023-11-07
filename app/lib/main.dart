@@ -181,11 +181,60 @@ class WorkerConditionInfoBox extends StatelessWidget {
         children: [
           TextSpan(text: condition.location),
           const TextSpan(text: '  •  '),
-          TextSpan(text: '${condition.bodyTemperature.toStringAsFixed(1)}°C'),
+          WidgetSpan(
+            child: TempertureText(
+              icon: Icons.accessibility,
+              degree: condition.bodyTemperature,
+              warmingThreshold: 37.8,
+            ),
+          ),
           const TextSpan(text: '  •  '),
-          TextSpan(text: '${condition.envTemperature.toStringAsFixed(1)}°C'),
+          WidgetSpan(
+            child: TempertureText(
+              icon: Icons.wb_sunny,
+              degree: condition.envTemperature,
+              warmingThreshold: 30,
+            ),
+          ),
+          const TextSpan(text: '  •  '),
+          WidgetSpan(
+            child: Icon(
+              Icons.room_service,
+              size: 20,
+              color: condition.withHelmet ? Colors.green : Colors.red,
+            ),
+          ),
+          if (condition.withHelmet == false)
+            const TextSpan(text: " 沒有頭盔", style: TextStyle(color: Colors.red)),
         ],
       ),
+    );
+  }
+}
+
+class TempertureText extends StatelessWidget {
+  final IconData icon;
+  final double degree;
+  final double warmingThreshold;
+  const TempertureText({
+    required this.icon,
+    required this.degree,
+    required this.warmingThreshold,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final myColor = degree >= warmingThreshold ? Colors.red : Colors.grey;
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: myColor),
+        const SizedBox(width: 5),
+        Text(
+          '${degree.toStringAsFixed(1)}°C',
+          style: TextStyle(color: myColor, fontSize: 14),
+        )
+      ],
     );
   }
 }

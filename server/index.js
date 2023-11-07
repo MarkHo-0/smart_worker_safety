@@ -1,7 +1,7 @@
 import http from "http";
 import { Bonjour } from "bonjour-service";
-import { managerServer } from "./modules/manager";
-import { workerServer } from "./modules/worker";
+import { managerServer } from "./modules/manager/index.js";
+import { workerServer } from "./modules/worker/index.js";
 
 const PORT = 8080;
 const server = http.createServer();

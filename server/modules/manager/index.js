@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import { getWorkersByManager } from "../worker/db.js";
-import { getManager } from "./db.js";
+import { getManager, setFCMtoken } from "./db.js";
 import { IncompleteInteraction } from "../../utils/incomplete_interaction.js";
 
 const managerServer = new WebSocketServer({
@@ -8,7 +8,7 @@ const managerServer = new WebSocketServer({
   clientTracking: true,
 });
 
-managerServer.on("connection", async (client, _) => {
+managerServer.on("connection", async (client, req) => {
   const identity = await getManager(req.unverifiedID);
   if (!identity) return client.close();
   client.identity = identity;
@@ -42,6 +42,10 @@ managerServer.on("connection", async (client, _) => {
         request.setOnTimeOut(10, () => {
           client.send({ from: targetID, reply_condition: null });
         });
+        break;
+
+      case "fcm_token":
+        setFCMtoken(identity, eventable.data);
         break;
       default:
         break;

@@ -24,3 +24,8 @@ export async function createRandomData() {
 
   return db.write();
 }
+
+export async function setFCMtoken(manager, token) {
+  manager.fcmToken = token;
+  await db.write();
+}

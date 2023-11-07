@@ -1,61 +1,53 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <Wire.h>
 
 #include <ArduinoWebsockets.h>
 #include <ezButton.h>
 #include <ArduinoJson.h>
-
-#include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <Fonts/FreeSerif9pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
 
 using namespace websockets;
 WebsocketsClient client;
-String deviceName = "SmartWorkerSafety_Watch_1";
 
-Adafruit_SSD1306 display(128, 64, &Wire, -1);
-
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 ezButton flashButton(0);
 ezButton confirmButton(27);
 ezButton rightButton(26);
 ezButton leftButton(25);
 
 void setup() {
-	Serial.begin(115200);
-	Serial.setDebugOutput(true);
+  Serial.setDebugOutput(true);
+	initScreen();
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-    Serial.println("SSD1306 allocation failed");
-    return;
-  }
-
-  display.setFont(&FreeSerif9pt7b);
-  display.clearDisplay();
-  display.setTextSize(1);             
-  display.setTextColor(WHITE);        
-  display.setCursor(0,20);             
-  display.println("Hello, world!");
-  display.display();
-
-  WiFi.setHostname(deviceName.c_str());
+  drawTextOnCenter("Connecting to Wifi...");
+  WiFi.setHostname("SmartWorkerSafety_Watch_1");
 	WiFi.mode(WIFI_STA);
-  WiFi.begin("WIFI_SSID", "WIFI_PWS");
-  Serial.println("");
-
+  WiFi.begin("EasyMode", "EasyMode");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
   }
 
-  bool connected = client.connect("Server_IP", 8080, "/?mode=m&id=1");
-  if(connected) {
-    Serial.println("Connected!");
-  } else {
-    Serial.println("Not Connected!");
+  drawTextOnCenter("Searching Server");
+  if ((mdns_init() == ESP_OK && MDNS.queryService("ws", "tcp") > 0 && MDNS.hostname(0) == "sws_s") == false) {
+    drawTextOnCenter("Server Not Found");
+    return;
+  } 
+
+  drawTextOnCenter("Connecting Server");
+  bool connected = client.connect(MDNS.IP(0).toString(), MDNS.port(0), "/worker?id=1");
+  if(connected == false) {
+    drawTextOnCenter("Faild to Connect Server");
+    return;
   }
   
+  drawTextOnCenter("Wellcome Back");
   client.onMessage([&](WebsocketsMessage message){
     Serial.print("Got Message: ");
     Serial.println(message.data());
@@ -97,4 +89,27 @@ void loop() {
       client.send(json);
     }
   }
+}
+
+void initScreen() {
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
+    Serial.println("SSD1306 allocation failed");
+    return;
+  }
+
+  display.setFont(&FreeSans9pt7b);
+  display.clearDisplay();
+  display.setTextSize(1);             
+  display.setTextColor(WHITE);      
+  display.display();  
+}
+
+void drawTextOnCenter(String text) {
+  display.clearDisplay();
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor((SCREEN_WIDTH - w) / 2, (SCREEN_HEIGHT - h) / 2);
+  display.println(text);
+  display.display();
 }
