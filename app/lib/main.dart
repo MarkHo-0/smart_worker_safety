@@ -3,8 +3,22 @@ import 'package:smart_worker_safety/layouts/warning_page.dart';
 import 'package:smart_worker_safety/layouts/worker_list_page.dart';
 import 'package:smart_worker_safety/worker.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+void main() async {
   runApp(const MyApp());
+  Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  ).then((value) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    print("FCMToken $fcmToken");
+  }).catchError((err) {
+    print("Firebase Error");
+  });
+
   // 測試網絡用
   // final s = connectServer();
   // s.ready.then((value) {

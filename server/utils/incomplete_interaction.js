@@ -1,19 +1,23 @@
+import { Manager } from "../modules/manager/model";
+import { Worker } from "../modules/worker/model";
+
 /** @type {Set<IncompleteInteraction>} */
 let interactions = new Set();
 
 export class IncompleteInteraction {
-  constructor(type, fromID, toID) {
+  constructor(type, from, to) {
     /** @type {String} */ this.type = type;
-    /** @type {Number} */ this.fromID = fromID;
-    /** @type {Number} */ this.toID = toID;
+    /** @type {Worker | Manager} */ this.from = from;
+    /** @type {Worker | Manager} */ this.to = to;
     /** @private @type {Number} */ this.timeoutID = null;
     /** @private @type {Function} */ this.onCompleteFunc = null;
     this.startAt = Date.prototype.getTime();
-    interactions.push(this);
+    interactions.add(this);
   }
 
   setOnTimeOut(second = 0, func) {
     this.timeoutID = setTimeout(second * 1000, func);
+    interactions.delete(this);
   }
 
   setOnComplete(func) {
@@ -30,8 +34,8 @@ export class IncompleteInteraction {
 export function getIncompleteInteraction(type, fromID, toID) {
   for (const i of interactions) {
     if (i.type != type) continue;
-    if (!(i.fromID != undefined && i.fromID == fromID)) continue;
-    if (!(i.toID != undefined && i.toID == toID)) continue;
+    if (!(i.from != undefined && i.from == fromID)) continue;
+    if (!(i.to != undefined && i.to == toID)) continue;
     return i;
   }
 }

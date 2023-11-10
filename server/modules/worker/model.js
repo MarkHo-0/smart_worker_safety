@@ -1,5 +1,6 @@
+import { Onlineable } from "../../utils/onlineable.js";
 export class WorkerCondition {
-  status = WorkerStatus.HOLIDAY;
+  status = WorkerStatus.WORKING;
   location = "";
   bodyTemperature = 0;
   envTemperature = 0;
@@ -8,26 +9,39 @@ export class WorkerCondition {
 }
 
 export class WorkerBio {
-  id = 0;
-  name = "";
-  position = "";
-  supervisorID = 0;
-
   constructor(id = 0, name = "", position = "", supervisorID = "") {
-    this.id = id;
-    this.name = name;
-    this.position = position;
-    this.supervisorID = supervisorID;
+    /** @type {number} */ this.id = id;
+    /** @type {string} */ this.name = name;
+    /** @type {string} */ this.position = position;
+    /** @type {number} */ this.supervisorID = supervisorID;
+  }
+
+  static fromJSON(d) {
+    return new this(d["id"], d["name"], d["position"], d["supervisorID"]);
   }
 }
 
-export class Worker {
-  bio = new WorkerBio();
-  condition = new WorkerCondition();
+/** @augments Onlineable<WorkerCondition> */
+export class Worker extends Onlineable {
+  constructor(bio) {
+    super();
+    /** @type {WorkerBio} */ this.bio = bio;
+    /** @type {import("../manager/model.js").Manager} */ this.manager = null;
+  }
+
+  sendToWatch(data) {
+    if (this.isOnline) this.client.send(data);
+  }
+
+  toJSON() {
+    return {
+      bio: this.bio,
+      condition: this.onlineData,
+    };
+  }
 }
 
 export const WorkerStatus = {
-  HOLIDAY: 0,
+  RESTING: 0,
   WORKING: 1,
-  RESTING: 2,
 };

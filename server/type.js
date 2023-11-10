@@ -2,13 +2,13 @@ import { WebSocket } from "ws";
 
 /**
  * @template T
- * @typedef {Object} ValidUser
+ * @typedef {Object} OnlineUser
  * @property {T} identity
  */
 
 /**
  * @template T
- * @typedef {WebSocket & ValidUser<T>} Client
+ * @typedef {WebSocket & OnlineUser<T>} Client
  */
 
 export const Types = {};

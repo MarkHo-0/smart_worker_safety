@@ -1,13 +1,20 @@
 import { JSONPreset } from "lowdb/node";
-import { Manager } from "./model.js";
+import { Manager, ManagerBio } from "./model.js";
 
 /** @type {Array<Manager>} */
-const managerData = [];
-const db = await JSONPreset("./data/manager.json", managerData);
+let managers = [];
 
-export async function getManager(id = 0) {
-  await db.read();
-  return db.data.find((manager) => manager.id == id);
+export function readWorkers() {
+  const data = readFileSync("./data/manager.json");
+  const managerBios = JSON.parse(data);
+  if (Array.isArray(managerBios) == false) throw "Invalid Manager Data";
+  managers = managerBios.map(
+    (bio) => new Manager(new ManagerBio.fromJSON(bio))
+  );
+}
+
+export function getManager(id = 0) {
+  return managers.find((manager) => manager.bio == id);
 }
 
 export async function createRandomData() {
@@ -23,9 +30,4 @@ export async function createRandomData() {
   }
 
   return db.write();
-}
-
-export async function setFCMtoken(manager, token) {
-  manager.fcmToken = token;
-  await db.write();
 }

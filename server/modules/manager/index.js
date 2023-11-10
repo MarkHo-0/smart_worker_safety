@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
-import { getWorkersByManager } from "../worker/db.js";
-import { getManager, setFCMtoken } from "./db.js";
+import { getManager } from "./db.js";
 import { IncompleteInteraction } from "../../utils/incomplete_interaction.js";
+import { getWorkersByManager } from "../worker/db.js";
 
 const managerServer = new WebSocketServer({
   noServer: true,
@@ -9,48 +9,38 @@ const managerServer = new WebSocketServer({
 });
 
 managerServer.on("connection", async (client, req) => {
-  const identity = await getManager(req.unverifiedID);
-  if (!identity) return client.close();
-  client.identity = identity;
+  const manager = getManager(req.unverifiedID);
 
-  client.on("message", (eventable) => {
-    if (eventable instanceof String) {
-      eventable = JSON.parse(eventable);
-    }
+  //檢查工頭ID是否存在，//以及是否重複連接
+  if (!manager || manager.isOnline) return client.close();
 
-    switch (eventable.event) {
-      case "get_workers":
-        getWorkersByManager(identity.id).then((workers) =>
-          client.send({ wokers_data_changed: workers })
-        );
-        break;
+  //上線
+  manager.online(client, getWorkersByManager(manager.bio.id));
 
-      case "reminder":
-        break;
-      case "call_to_office":
-        break;
-      case "request_condition":
-        const targetID = parseInt(eventable.data["to"]);
-        const request = new IncompleteInteraction(
-          "request_condition",
-          identity.id,
-          targetID
-        );
-        request.setOnComplete((worker_condition) => {
-          client.send({ from: targetID, reply_condition: worker_condition });
-        });
-        request.setOnTimeOut(10, () => {
-          client.send({ from: targetID, reply_condition: null });
-        });
-        break;
+  manager
+    .on("get_workers", (_) => {
+      const result = manager.onlineData
+        .sort((a, b) => a.onlineData?.status - b.onlineData?.status)
+        .map((worker) => worker.toJSON());
+      manager.send({ wokers_data_changed: result });
+    })
+    .on("request_condition", (data) => {
+      const targetID = parseInt(data["target"]);
+      const targetWorker = manager.onlineData.find((w) => w.bio.id == targetID);
+      targetWorker.send({ request_condition: manager.bio.id });
 
-      case "fcm_token":
-        setFCMtoken(identity, eventable.data);
-        break;
-      default:
-        break;
-    }
-  });
+      const request = new IncompleteInteraction(
+        "request_condition",
+        manager,
+        targetWorker
+      );
+      request.setOnComplete((worker_condition) => {
+        manager.send({ from: targetID, reply_condition: worker_condition });
+      });
+      request.setOnTimeOut(10, () => {
+        manager.send({ from: targetID, reply_condition: null });
+      });
+    });
 });
 
 export { managerServer };

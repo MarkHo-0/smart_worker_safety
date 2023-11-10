@@ -153,6 +153,7 @@ class WorkerConditionInfoBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
+        style: TextStyle(color: Colors.black),
         children: [
           TextSpan(text: condition.location),
           const TextSpan(text: '  •  '),
@@ -163,7 +164,7 @@ class WorkerConditionInfoBox extends StatelessWidget {
               warmingThreshold: 37.8,
             ),
           ),
-          const TextSpan(text: '  •  '),
+          const TextSpan(text: ' • '),
           WidgetSpan(
             child: TempertureText(
               icon: Icons.wb_sunny,
@@ -171,7 +172,7 @@ class WorkerConditionInfoBox extends StatelessWidget {
               warmingThreshold: 30,
             ),
           ),
-          const TextSpan(text: '  •  '),
+          const TextSpan(text: ' • '),
           WidgetSpan(
             child: Icon(
               Icons.room_service,

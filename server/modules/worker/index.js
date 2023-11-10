@@ -4,8 +4,8 @@ import {
   wifiSignalData2Location,
 } from "../wifi_signal/index.js";
 import { requestHelp } from "./help.js";
-import { Worker, WorkerStatus } from "./model.js";
-import { clearConditionData, getWorkerAndInit } from "./db.js";
+import { Worker, WorkerCondition, WorkerStatus } from "./model.js";
+import { getWorker } from "./db.js";
 import { getIncompleteInteraction } from "../../utils/incomplete_interaction.js";
 
 const workerServer = new WebSocketServer({
@@ -13,54 +13,42 @@ const workerServer = new WebSocketServer({
   clientTracking: true,
 });
 
-let modifiedWorkerIDList = [];
-
 workerServer.on("connection", async (client, req) => {
-  const identity = await getWorkerAndInit(req.unverifiedID);
-  if (!identity) return client.close();
-  client.identity = identity;
+  const worker = getWorker(client.undefined);
 
-  client.on("message", (eventable) => {
-    if (eventable instanceof Buffer) {
-      eventable = eventable.toJSON();
-    }
+  //檢查工友編號是否存在，以及檢查是否重複連接
+  if (!worker || worker.isOnline) return client.close();
 
-    switch (eventable.event) {
-      case "wifi_signal_changed":
-        const newLocation = wifiSignalData2Location(eventable.data);
-        if (newLocation == identity.condition.location) return;
-        mayChangeWorkerStatus(identity, newLocation);
-        break;
+  //將工友設為上線
+  worker.online(client, new WorkerCondition());
 
-      case "temperature_updated":
-        identity.condition.bodyTemperature = eventable.data["body"];
-        identity.condition.envTemperature = eventable.data["env"];
-        break;
-
-      case "helmet_state_updated":
-        identity.condition.withHelmet = Boolean(eventable.data);
-        break;
-
-      case "reply_condition":
-        const conditionReqeust = getIncompleteInteraction(
-          "request_condition",
-          undefined,
-          identity.bio.id
-        );
-        if (conditionReqeust == undefined) return;
-        conditionReqeust.complete(eventable.data);
-        break;
-
-      case "request_help":
-        requestHelp(identity, eventable.data);
-        break;
-
-      default:
-    }
+  worker.on("wifi_signal_changed", (data) => {
+    const newLocation = wifiSignalData2Location(data);
+    if (newLocation == worker.onlineData.location) return;
+    mayChangeWorkerStatus(worker, newLocation);
   });
 
-  client.once("close", (code) => {
-    clearConditionData(identity.bio.id);
+  worker.on("temperature_updated", (data) => {
+    worker.condition.bodyTemperature = data["body"];
+    worker.condition.envTemperature = data["env"];
+  });
+
+  worker.on("helmet_state_updated", (data) => {
+    worker.condition.withHelmet = Boolean(data);
+  });
+
+  worker.on("reply_condition", (data) => {
+    const conditionReqeust = getIncompleteInteraction(
+      "request_condition",
+      undefined,
+      worker.bio.id
+    );
+    if (conditionReqeust == undefined) return;
+    conditionReqeust.complete(data);
+  });
+
+  worker.on("request_help", (data) => {
+    worker.manager.pushNotification({ worker: worker.toJSON(), help: data });
   });
 });
 /**

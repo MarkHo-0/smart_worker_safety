@@ -1,10 +1,4 @@
-export function requestHelp(worker, detail) {
-  const taskID = setTimeout(
-    () => commnication.sendToManager(helpType),
-    data.delaySecond * 1000
-  );
-  helpList.push(taskID);
-}
+export function requestHelp(worker, detail) {}
 
 export function revokeHelp(worker = {}) {
   clearTimeout();

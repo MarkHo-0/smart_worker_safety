@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "667143577237",
+    "project_id": "smart-worker-app",
+    "storage_bucket": "smart-worker-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:667143577237:android:886a326cbffb8f6fbec59c",
+        "android_client_info": {
+          "package_name": "com.worker.smart_worker_safety"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXtB2my5Bc6-91pVreSgyBsVbeLbVaN4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

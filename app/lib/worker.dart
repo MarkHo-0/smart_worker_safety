@@ -41,7 +41,7 @@ class WorkerCondition extends ChangeNotifier {
     final currentTime = DateTime.now().millisecondsSinceEpoch;
     return WorkerCondition(
       location: workerLocations[random.nextInt(workerLocations.length)],
-      bodyTemperature: random.nextDouble() * 10 + 25,
+      bodyTemperature: random.nextDouble() * 3 + 36,
       envTemperature: random.nextDouble() * 10 + 25,
       status: WorkerStatus.values[random.nextInt(3)],
       startTimeMS: currentTime - random.nextInt(1000 * 60 * 60 * 5),
