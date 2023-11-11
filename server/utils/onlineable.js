@@ -1,14 +1,15 @@
-import { EventEmitter, WebSocket } from "ws";
+import { WebSocket } from "ws";
+import { EventEmitter } from "events";
 
 /** @template T */
 export class Onlineable extends EventEmitter {
   constructor() {
+    super();
     /** @type {WebSocket | null} @private */ this.client = null;
     /** @type {T | null} */ this.onlineData = null;
   }
 
   /**
-   *
    * @param {WebSocket} client
    * @param {T} data
    * @returns
@@ -19,7 +20,7 @@ export class Onlineable extends EventEmitter {
     this.onlineData = data;
 
     this.client.on("message", (data) => {
-      this.emit(data.event, data);
+      this.emit(data.e, data.d);
     });
 
     this.client.once("close", this.offline);
@@ -32,12 +33,16 @@ export class Onlineable extends EventEmitter {
     this.onlineData = null;
   }
 
-  send(data) {
+  /**
+   * @param {String} event 
+   * @param {Object} data 
+   */
+  send(event, data) {
     if (this.isOnline == false) return;
-    this.client.send(data);
+    return this.client.send({ e: event, d: data });
   }
 
   get isOnline() {
-    return this.client != null;
+    return this.client != null && this.client.readyState == WebSocket.OPEN;
   }
 }

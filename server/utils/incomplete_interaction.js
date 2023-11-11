@@ -1,5 +1,5 @@
-import { Manager } from "../modules/manager/model";
-import { Worker } from "../modules/worker/model";
+import { Manager } from "../modules/manager/model.js";
+import { Worker } from "../modules/worker/model.js";
 
 /** @type {Set<IncompleteInteraction>} */
 let interactions = new Set();
