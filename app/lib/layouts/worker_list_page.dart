@@ -72,7 +72,7 @@ class _WorkerListPageState extends State<WorkerListPage> {
                                 workers[i].bio.name,
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               Text(workers[i].bio.position)
                             ],
                           ),
@@ -153,7 +153,7 @@ class WorkerConditionInfoBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
-        style: TextStyle(color: Colors.black),
+        style: const TextStyle(color: Colors.black),
         children: [
           TextSpan(text: condition.location),
           const TextSpan(text: '  •  '),

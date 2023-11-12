@@ -19,7 +19,6 @@ export function readWorkersFromDisk() {
       return worker;
     })
     console.log(`已載入 ${workers.length} 名工人資料。`);
-    console.log(workers)
   } else {
     console.log("沒有任何工人資料被載入。");
   }

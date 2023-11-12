@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:smart_worker_safety/worker.dart';
 
 class WarningPage extends StatefulWidget {
-  final Worker worker;
-  final WarningType type;
+  final String workerName;
+  final String accidentLocation;
+  final WarningType accidentType;
   final int lastReachTimeMS;
-  WarningPage({
+  const WarningPage({
     super.key,
-    required this.worker,
-    required this.type,
+    required this.workerName,
+    required this.accidentLocation,
+    required this.accidentType,
     required this.lastReachTimeMS,
   });
 
@@ -51,30 +52,30 @@ class _WarningPageState extends State<WarningPage> {
             const SizedBox(height: 10),
             RichText(
               text: TextSpan(
-                style: TextStyle(fontSize: 18),
+                style: const TextStyle(fontSize: 18),
                 children: [
                   TextSpan(
-                    text: widget.worker.bio.name,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    text: widget.workerName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  TextSpan(text: ' 在 '),
+                  const TextSpan(text: ' 在 '),
                   TextSpan(
-                    text: widget.worker.condition.location,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    text: widget.accidentLocation,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
-                    text: ' ' + widget.type.text,
+                    text: ' ${widget.accidentType.text}',
                   ),
                 ],
               ),
             ),
             if (timeDiff > 0) Text('已 ${timeDiff.toInt()} 秒沒有回應'),
             const SizedBox(height: 30),
-            ElevatedButton(onPressed: () {}, child: Text("呼叫緊急醫療服務")),
+            ElevatedButton(onPressed: () {}, child: const Text("呼叫緊急醫療服務")),
             const SizedBox(height: 10),
-            ElevatedButton(onPressed: () {}, child: Text("確認及親自處理")),
+            ElevatedButton(onPressed: () {}, child: const Text("確認及親自處理")),
             const SizedBox(height: 10),
-            ElevatedButton(onPressed: () {}, child: Text("誤報")),
+            ElevatedButton(onPressed: () {}, child: const Text("誤報")),
           ],
         ),
       ),

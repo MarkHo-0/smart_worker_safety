@@ -18,6 +18,13 @@ class Worker {
       condition: WorkerCondition.random(),
     );
   }
+
+  factory Worker.fromName(String name) {
+    return Worker(
+      bio: WorkerBio.fromName(name),
+      condition: WorkerCondition.empty(),
+    );
+  }
 }
 
 class WorkerCondition extends ChangeNotifier {
@@ -48,6 +55,17 @@ class WorkerCondition extends ChangeNotifier {
       withHelmet: random.nextBool(),
     );
   }
+
+  factory WorkerCondition.empty() {
+    return WorkerCondition(
+      location: "",
+      bodyTemperature: 0,
+      envTemperature: 0,
+      status: WorkerStatus.holiday,
+      startTimeMS: 0,
+      withHelmet: false,
+    );
+  }
 }
 
 class WorkerBio {
@@ -63,6 +81,10 @@ class WorkerBio {
       name: workerNames[workerCount % workerNames.length],
       position: workerPositions[random.nextInt(workerPositions.length)],
     );
+  }
+
+  factory WorkerBio.fromName(String name) {
+    return WorkerBio(id: workerCount++, name: name, position: "");
   }
 }
 
