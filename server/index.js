@@ -1,17 +1,10 @@
 import http from "http";
-import { Bonjour } from "bonjour-service";
+import ciao from "@homebridge/ciao";
 import { managerServer } from "./modules/manager/index.js";
 import { workerServer } from "./modules/worker/index.js";
 
 const PORT = 8080;
 const server = http.createServer();
-
-const mdns = new Bonjour().publish({
-  name: "Smart Worker Safety Server",
-  host: "sws_s",
-  type: "ws",
-  port: PORT,
-});
 
 server.on("upgrade", async (req, socket, head) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -35,4 +28,12 @@ server.on("upgrade", async (req, socket, head) => {
   }
 });
 
-server.listen(PORT);
+server.listen(PORT).on("listening", () => {
+  console.log("Server is online at port " + PORT);
+});
+
+ciao
+  .getResponder()
+  .createService({ name: "swss", type: "ws", port: PORT })
+  .advertise()
+  .then(() => console.log("Service discovery has been enable"));

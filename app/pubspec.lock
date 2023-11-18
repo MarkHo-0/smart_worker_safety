@@ -33,6 +33,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  bonsoir:
+    dependency: "direct main"
+    description:
+      name: bonsoir
+      sha256: "6ec3bbb82c9befd0592201ff5febac23294a3b0ca186bcb152dd61a94e1535d7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
+  bonsoir_android:
+    dependency: transitive
+    description:
+      name: bonsoir_android
+      sha256: "2ad4606cc241269ae191d5a993e6ce896e57270b877b2e73bc2ce9b51c5061cf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.1"
+  bonsoir_darwin:
+    dependency: transitive
+    description:
+      name: bonsoir_darwin
+      sha256: "6b2dbd60aacd8d222c57779e5c781ace7710abf210082e790a82ef8b5db40ceb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.1"
+  bonsoir_platform_interface:
+    dependency: transitive
+    description:
+      name: bonsoir_platform_interface
+      sha256: "63e1295633de7e1d7215edaa37d24ac6063b37806080dd012e6e6ab51acd532c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -65,6 +97,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.2"
+  connectivity_plus:
+    dependency: transitive
+    description:
+      name: connectivity_plus
+      sha256: "77a180d6938f78ca7d2382d2240eb626c0f6a735d0bfdce227d8ffb80f95c48b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.2"
+  connectivity_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: connectivity_plus_platform_interface
+      sha256: cf1d1c28f4416f8c654d7dc3cd638ec586076255d407cef3ddbdaf178272a71a
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.4"
   convert:
     dependency: transitive
     description:
@@ -89,6 +137,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  dbus:
+    dependency: transitive
+    description:
+      name: dbus
+      sha256: "365c771ac3b0e58845f39ec6deebc76e3276aa9922b0cc60840712094d9047ac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.10"
   fake_async:
     dependency: transitive
     description:
@@ -97,6 +153,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.1"
+  ffi:
+    dependency: transitive
+    description:
+      name: ffi
+      sha256: "7bf0adc28a23d395f19f3f1eb21dd7cfd1dd9f8e1c50051c069122e6853bc878"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   firebase_core:
     dependency: "direct main"
     description:
@@ -224,14 +288,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
-  multicast_dns:
-    dependency: "direct main"
+  nm:
+    dependency: transitive
     description:
-      name: multicast_dns
-      sha256: f4fd1c3365171fac5160afcb1a283001d3413dee5fd41c61d80888952d609379
+      name: nm
+      sha256: "2c9aae4127bdc8993206464fcc063611e0e36e72018696cd9631023a31b24254"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.2+4"
+    version: "0.5.0"
   path:
     dependency: transitive
     description:
@@ -375,4 +439,4 @@ packages:
     version: "3.1.2"
 sdks:
   dart: ">=3.1.3 <4.0.0"
-  flutter: ">=3.3.0"
+  flutter: ">=3.7.0"

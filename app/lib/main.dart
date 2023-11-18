@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smart_worker_safety/network.dart';
 import 'package:smart_worker_safety/route.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
