@@ -8,7 +8,7 @@ int workerCount = 0;
 
 class Worker {
   final WorkerBio bio;
-  final WorkerCondition condition;
+  WorkerCondition condition;
 
   Worker({required this.bio, required this.condition});
 
@@ -23,6 +23,13 @@ class Worker {
     return Worker(
       bio: WorkerBio.fromName(name),
       condition: WorkerCondition.empty(),
+    );
+  }
+
+  factory Worker.fromJSON(dynamic json) {
+    return Worker(
+      bio: WorkerBio.fromJSON(json['bio']),
+      condition: WorkerCondition.fromJSON(json['condition']),
     );
   }
 }
@@ -66,6 +73,18 @@ class WorkerCondition extends ChangeNotifier {
       withHelmet: false,
     );
   }
+
+  factory WorkerCondition.fromJSON(dynamic json) {
+    if (json == null) return WorkerCondition.empty();
+    return WorkerCondition(
+      location: json['location'],
+      bodyTemperature: json['bodyTemperature'],
+      envTemperature: json['envTemperature'],
+      status: WorkerStatus.values[json['status']],
+      startTimeMS: json['startTimeMS'],
+      withHelmet: json['withHelmet'],
+    );
+  }
 }
 
 class WorkerBio {
@@ -85,6 +104,14 @@ class WorkerBio {
 
   factory WorkerBio.fromName(String name) {
     return WorkerBio(id: workerCount++, name: name, position: "");
+  }
+
+  factory WorkerBio.fromJSON(dynamic json) {
+    return WorkerBio(
+      id: json['id'],
+      name: json['name'],
+      position: json['position'],
+    );
   }
 }
 

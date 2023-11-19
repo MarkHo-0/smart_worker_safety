@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:smart_worker_safety/layouts/worker_list_page.dart';
 import 'package:smart_worker_safety/network.dart';
 
 class LoginLobby extends StatefulWidget {
@@ -54,7 +55,11 @@ class _LoginLobbyState extends State<LoginLobby>
                 width: 200,
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: isFaildFindServer ? "搜尋失敗，請手動輸入" : "",
+                    hintText: isSearchingServer
+                        ? "正在搜尋伺服器..."
+                        : isFaildFindServer
+                            ? "搜尋失敗，請手動輸入"
+                            : "",
                   ),
                   readOnly: isLogining,
                   controller: addressInput,
@@ -65,7 +70,7 @@ class _LoginLobbyState extends State<LoginLobby>
                 onPressed: searchServer,
                 icon: RotationTransition(
                   turns: spinAnimation,
-                  child: Icon(Icons.sync),
+                  child: const Icon(Icons.sync),
                 ),
               ),
             ],
@@ -97,11 +102,41 @@ class _LoginLobbyState extends State<LoginLobby>
     );
   }
 
+  Future<void> showLoginFailedPopup() {
+    return showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('連接伺服器失敗'),
+          content: const Text('請檢查伺服器地址或工頭編號是否正確'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('返回'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void login() {
     if (isLogining || isSearchingServer) return;
-
     if (addressInput.text.isEmpty || managerIdInput.text.isEmpty) return;
+
+    final ipAndPort = addressInput.text.split(':');
+    if (ipAndPort.length != 2) return;
+
     setState(() => isLogining = true);
+
+    final address = Uri(host: ipAndPort[0], port: int.tryParse(ipAndPort[1]));
+    connectServer(address, managerIdInput.text).then((_) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (__) => const WorkerListPage(),
+      ));
+    }).onError((error, stackTrace) {
+      showLoginFailedPopup().then((_) => setState(() => isLogining = false));
+    });
   }
 
   void searchServer() {

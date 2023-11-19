@@ -24,7 +24,7 @@ export class Onlineable extends EventEmitter {
     });
 
     this.client.once("close", this.offline);
-
+    this.emit('online');
     return true;
   }
 
@@ -39,7 +39,8 @@ export class Onlineable extends EventEmitter {
    */
   send(event, data) {
     if (this.isOnline == false) return;
-    return this.client.send({ e: event, d: data });
+    data = JSON.stringify({ e: event, d: data });
+    return this.client.send(data);
   }
 
   get isOnline() {

@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:smart_worker_safety/network.dart';
 
 import '../sorting.dart';
-import '../testdata.dart';
 import '../worker.dart';
 
 class WorkerListPage extends StatefulWidget {
@@ -12,17 +13,16 @@ class WorkerListPage extends StatefulWidget {
 }
 
 class _WorkerListPageState extends State<WorkerListPage> {
-  List<Worker> workers = List.generate(
-    workerNames.length,
-    (i) => Worker.random(),
-  );
+  List<Worker> workers = [];
 
   Future<void> onRefresh() async {
-    await Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        workers = List.generate(workerNames.length, (i) => Worker.random());
-      });
-    });
+    //TODO: 刷新數據
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fromServer.stream.listen(onServerEvent);
   }
 
   @override
@@ -99,6 +99,25 @@ class _WorkerListPageState extends State<WorkerListPage> {
         ),
       ),
     );
+  }
+
+  void onServerEvent(ServerEvent event) {
+    if (event.name == 'workers_data_all') {
+      final rawData = event.data as Iterable<dynamic>;
+      workers = rawData.map((w) => Worker.fromJSON(w)).toList();
+      setState(() {});
+      return;
+    }
+
+    if (event.name == 'worker_condition_updated') {
+      final workerID = event.data['id'] as int;
+      final newCondition = WorkerCondition.fromJSON(event.data['c']);
+
+      final listIdx = workers.indexWhere((w) => w.bio.id == workerID);
+      if (listIdx == -1) return;
+      workers[listIdx].condition = newCondition;
+      setState(() {});
+    }
   }
 
   void showWorkerAction(Worker worker) {

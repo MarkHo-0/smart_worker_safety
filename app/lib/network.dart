@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:bonsoir/bonsoir.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+final StreamController<ServerEvent> fromServer = StreamController();
+final StreamController<ServerEvent> toServer = StreamController();
+
 Future<Uri> findServerAddress() async {
   if (kIsWeb) return Future.error(Exception('Web is not support'));
 
@@ -41,15 +44,28 @@ Future<Uri> findServerAddress() async {
   return completer.future;
 }
 
-WebSocketChannel connectServer(Uri address, int managerID) {
-  address.queryParameters.addAll({'id': managerID.toString()});
-  return WebSocketChannel.connect(address);
+Future<void> connectServer(Uri serverAddress, String managerID) {
+  final fullAddress = serverAddress.replace(
+    scheme: 'ws',
+    path: 'manager',
+    queryParameters: {'id': managerID},
+  );
+  final channel = WebSocketChannel.connect(fullAddress);
+  return channel.ready.timeout(const Duration(seconds: 5)).then((_) {
+    channel.stream.listen((rawData) {
+      if (rawData is String) rawData = jsonDecode(rawData);
+      if (rawData['e'] == null || rawData['d'] == null) return;
+      fromServer.add(ServerEvent(rawData['e'], rawData['d']));
+    });
+    toServer.stream.listen((event) {
+      // TODO: 增加發送邏輯
+    });
+  });
 }
 
-void onWorkerWorkingStateUpdated(WebSocketChannel channel, Function callback) {
-  channel.stream.listen((msg) {
-    final jsonData = jsonDecode(msg);
+class ServerEvent {
+  final String name;
+  final dynamic data;
 
-    if (jsonData['event'] == 'WorkerWorkingStateUpdated') {}
-  });
+  ServerEvent(this.name, this.data);
 }

@@ -15,7 +15,7 @@ export class Manager extends Onlineable {
       const result = this.onlineData
         .sort((a, b) => a.onlineData?.status - b.onlineData?.status)
         .map((worker) => worker.toJSON());
-      manager.send("wokers_data_changed", { workers: result });
+      manager.send("workers_data_all", result);
     })
     this.on("request_condition", (data) => {
       const targetID = parseInt(data["target"]);
