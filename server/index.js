@@ -1,26 +1,21 @@
 import http from "http";
 import ciao from "@homebridge/ciao";
-import { managerServer } from "./modules/manager/index.js";
-import { workerServer } from "./modules/worker/index.js";
+import { connectManagerServer } from "./modules/manager/index.js";
+import { connectWorkerServer } from "./modules/worker/index.js";
 
 const PORT = 8080;
 const server = http.createServer();
 
 server.on("upgrade", async (req, socket, head) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const id = url.searchParams.get("id");
-  req.unverifiedID = parseInt(id);
+  const id = parseInt(url.searchParams.get("id"));
 
   switch (url.pathname) {
     case "/worker":
-      workerServer.handleUpgrade(req, socket, head, (ws) =>
-        workerServer.emit("connection", ws, req)
-      );
+      connectWorkerServer(req, socket, head, id);
       break;
     case "/manager":
-      managerServer.handleUpgrade(req, socket, head, (ws) =>
-        managerServer.emit("connection", ws, req)
-      );
+      connectManagerServer(req, socket, head, id);
       break;
     default:
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");

@@ -9,15 +9,21 @@ const managerServer = new WebSocketServer({
   clientTracking: true,
 });
 
-managerServer.on("connection", async (client, req) => {
-  //根據ID獲取工頭資料
-  const manager = getManager(req.unverifiedID);
+export function connectManagerServer(req, socket, head, unverifiedID) {
+  const manager = getManager(unverifiedID);
 
-  //檢查工頭ID是否存在，以及是否重複連接
-  if (!manager || manager.isOnline) return client.close();
+  if (manager == null) {
+    socket.write("HTTP/1.1 404 Invalid ID\r\n\r\n");
+    socket.destroy();
+    return;
+  }
 
-  //上線
-  manager.online(client, getWorkersByManager(manager.bio.id));
-});
+  if (manager.isOnline) manager.offline();
 
-export { managerServer };
+  managerServer.handleUpgrade(req, socket, head, (ws) => {
+    managerServer.emit("connection", ws, req);
+    manager.online(ws, getWorkersByManager(manager.bio.id));
+  });
+}
+
+export { getManager };

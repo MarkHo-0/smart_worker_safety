@@ -9,15 +9,19 @@ const workerServer = new WebSocketServer({
   clientTracking: true,
 });
 
-workerServer.on("connection", async (client, req) => {
-  //根據工友ID獲取資料
-  const worker = getWorker(client.unverifiedID);
+export function connectWorkerServer(req, socket, head, unverifiedID) {
+  const worker = getWorker(req.unverifiedID);
 
-  //檢查工友編號是否存在，以及檢查是否重複連接
-  if (!worker || worker.isOnline) return client.close();
+  if (worker == null) {
+    socket.write("HTTP/1.1 404 Invalid ID\r\n\r\n");
+    socket.destroy();
+    return;
+  }
 
-  //將工友設為上線
-  worker.online(client, new WorkerCondition());
-});
+  if (worker.isOnline) worker.offline();
 
-export { workerServer };
+  workerServer.handleUpgrade(req, socket, head, (ws) => {
+    workerServer.emit("connection", ws, req);
+    worker.online(ws, new WorkerCondition());
+  });
+}

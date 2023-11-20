@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_worker_safety/layouts/login_lobby.dart';
 import 'package:smart_worker_safety/layouts/warning_page.dart';
 import 'package:smart_worker_safety/layouts/worker_list_page.dart';
+import 'package:smart_worker_safety/network.dart';
 
 import 'firebase_options.dart';
 
@@ -15,7 +16,6 @@ class RouteContainer extends StatefulWidget {
 }
 
 class _RouteContainerState extends State<RouteContainer> {
-  late final Uri serverAddress;
   @override
   void initState() {
     super.initState();
@@ -54,7 +54,7 @@ class _RouteContainerState extends State<RouteContainer> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: LoginLobby());
+    return LoginLobby();
   }
 }
 

@@ -6,25 +6,31 @@ export class Worker extends Onlineable {
   constructor(bio) {
     super();
     /** @type {WorkerBio} */ this.bio = bio;
-    /** @type {import("../manager/model.js").Manager | null} */ this.manager = null;
-    this.regesterEvents()
+    /** @type {import("../manager/model.js").Manager | null} */ this.manager =
+      null;
+    /** @type {boolean} */ this.isDataDirty = false;
+    this.regesterEvents();
   }
 
   regesterEvents() {
     this.on("wifi_signal_changed", (data) => {
       const newLocation = wifiSignalData2Location(data);
       if (newLocation == this.onlineData.location) return;
-      mayChangeWorkerStatus(newLocation);
-      this.onlineData.location = newLocation;
+      if (this.mayChangeWorkerStatus(newLocation)) {
+        this.onlineData.location = newLocation;
+        this.isDataDirty = true;
+      }
     });
 
     this.on("temperature_updated", (data) => {
-      worker.condition.bodyTemperature = data["body"];
-      worker.condition.envTemperature = data["env"];
+      this.onlineData.bodyTemperature = data["body"];
+      this.onlineData.envTemperature = data["env"];
+      this.isDataDirty = true;
     });
 
     this.on("helmet_state_updated", (data) => {
-      worker.condition.withHelmet = Boolean(data["withHelmet"]);
+      this.onlineData.withHelmet = Boolean(data["withHelmet"]);
+      this.isDataDirty = true;
     });
 
     this.on("reply_condition", (data) => {
@@ -41,8 +47,8 @@ export class Worker extends Onlineable {
       this.manager.pushNotification({
         worker_id: worker.bio.id,
         worker_name: worker.bio.name,
-        accident_location: worker.onlineData.location,
-        accident_type: String(data['help_type']),
+        accident_location: this.onlineData.location,
+        accident_type: String(data["help_type"]),
         last_reach_time_ms: new Date().getTime().toString(),
       });
     });
@@ -59,6 +65,12 @@ export class Worker extends Onlineable {
       return true;
     }
     return false;
+  }
+
+  checkDirtyAndClean() {
+    if (this.isDataDirty == false) return false;
+    this.isDataDirty = false;
+    return true;
   }
 
   toJSON() {

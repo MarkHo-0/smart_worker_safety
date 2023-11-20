@@ -20,22 +20,27 @@ export class Onlineable extends EventEmitter {
     this.onlineData = data;
 
     this.client.on("message", (data) => {
+      if (data instanceof Buffer) data = JSON.parse(data.toString());
       this.emit(data.e, data.d);
     });
 
     this.client.once("close", this.offline);
-    this.emit('online');
+    this.emit("connected");
     return true;
   }
 
   offline() {
+    if (this.client && this.client.OPEN) {
+      this.client.close();
+    }
+    this.emit("disconnected");
     this.client = null;
     this.onlineData = null;
   }
 
   /**
-   * @param {String} event 
-   * @param {Object} data 
+   * @param {String} event
+   * @param {Object} data
    */
   send(event, data) {
     if (this.isOnline == false) return;

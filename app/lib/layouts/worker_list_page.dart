@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:smart_worker_safety/layouts/login_lobby.dart';
 import 'package:smart_worker_safety/network.dart';
 
 import '../sorting.dart';
@@ -14,15 +15,19 @@ class WorkerListPage extends StatefulWidget {
 
 class _WorkerListPageState extends State<WorkerListPage> {
   List<Worker> workers = [];
+  late StreamSubscription<ServerEvent> sub;
 
   Future<void> onRefresh() async {
-    //TODO: 刷新數據
+    final event = ServerEvent.fromName('get_workers');
+    toServer.sink.add(event);
+    return Future.value();
   }
 
   @override
   void initState() {
     super.initState();
-    fromServer.stream.listen(onServerEvent);
+    sub = fromServer.stream.listen(onServerEvent);
+    onRefresh();
   }
 
   @override
@@ -104,19 +109,28 @@ class _WorkerListPageState extends State<WorkerListPage> {
   void onServerEvent(ServerEvent event) {
     if (event.name == 'workers_data_all') {
       final rawData = event.data as Iterable<dynamic>;
+      if (rawData.isEmpty) return;
       workers = rawData.map((w) => Worker.fromJSON(w)).toList();
       setState(() {});
       return;
     }
 
-    if (event.name == 'worker_condition_updated') {
-      final workerID = event.data['id'] as int;
-      final newCondition = WorkerCondition.fromJSON(event.data['c']);
-
-      final listIdx = workers.indexWhere((w) => w.bio.id == workerID);
-      if (listIdx == -1) return;
-      workers[listIdx].condition = newCondition;
+    if (event.name == 'workers_condition_updated') {
+      for (var condition in event.data as Iterable<dynamic>) {
+        final workerID = condition['id'] as int;
+        final newCondition = WorkerCondition.fromJSON(condition['c']);
+        final listIdx = workers.indexWhere((w) => w.bio.id == workerID);
+        if (listIdx == -1) return;
+        workers[listIdx].condition = newCondition;
+      }
       setState(() {});
+      return;
+    }
+
+    if (event.name == 'disconnected') {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (__) => LoginLobby(),
+      ));
     }
   }
 
@@ -158,6 +172,12 @@ class _WorkerListPageState extends State<WorkerListPage> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    sub.cancel();
+    super.dispose();
   }
 }
 

@@ -38,77 +38,86 @@ class _LoginLobbyState extends State<LoginLobby>
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "智能工友安全",
-            style: TextStyle(fontSize: 24, color: Colors.yellow.shade600),
-          ),
-          const SizedBox(height: 50),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('伺服器地址: '),
-              SizedBox(
-                width: 200,
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: isSearchingServer
-                        ? "正在搜尋伺服器..."
-                        : isFaildFindServer
-                            ? "搜尋失敗，請手動輸入"
-                            : "",
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "智能工友安全",
+              style: TextStyle(fontSize: 24, color: Colors.yellow.shade600),
+            ),
+            const SizedBox(height: 50),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('伺服器地址: '),
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: isSearchingServer
+                          ? "正在搜尋伺服器..."
+                          : isFaildFindServer
+                              ? "搜尋失敗，請手動輸入"
+                              : "",
+                    ),
+                    readOnly: isLogining,
+                    controller: addressInput,
+                    focusNode: addressFocusNode,
                   ),
-                  readOnly: isLogining,
-                  controller: addressInput,
-                  focusNode: addressFocusNode,
                 ),
-              ),
-              IconButton(
-                onPressed: searchServer,
-                icon: RotationTransition(
-                  turns: spinAnimation,
-                  child: const Icon(Icons.sync),
+                IconButton(
+                  onPressed: searchServer,
+                  icon: RotationTransition(
+                    turns: spinAnimation,
+                    child: const Icon(Icons.sync),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("  工頭編號: "),
-              SizedBox(
-                width: 200,
-                child: TextField(
-                  readOnly: isLogining,
-                  controller: managerIdInput,
-                  focusNode: managerIdFocusNode,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("  工頭編號: "),
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    readOnly: isLogining,
+                    controller: managerIdInput,
+                    focusNode: managerIdFocusNode,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: login,
-            child: Text(isLogining ? "登入中" : "登入"),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: login,
+              child: Text(isLogining ? "登入中" : "登入"),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> showLoginFailedPopup() {
+  Future<void> showLoginFailedPopup(Object? error) {
     return showDialog(
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: const Text('連接伺服器失敗'),
-          content: const Text('請檢查伺服器地址或工頭編號是否正確'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('請檢查伺服器地址或工頭編號是否正確'),
+              Text(error.toString(), style: const TextStyle(fontSize: 12))
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -135,7 +144,9 @@ class _LoginLobbyState extends State<LoginLobby>
         builder: (__) => const WorkerListPage(),
       ));
     }).onError((error, stackTrace) {
-      showLoginFailedPopup().then((_) => setState(() => isLogining = false));
+      showLoginFailedPopup(error).then(
+        (_) => setState(() => isLogining = false),
+      );
     });
   }
 
@@ -146,6 +157,7 @@ class _LoginLobbyState extends State<LoginLobby>
       isSearchingServer = true;
       isFaildFindServer = false;
     });
+    addressInput.clear();
     spinController.repeat();
 
     findServerAddress().then((uri) {
