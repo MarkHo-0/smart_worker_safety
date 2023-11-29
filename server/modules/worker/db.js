@@ -17,7 +17,7 @@ export function readWorkersFromDisk() {
         worker.manager = manager;
       }
       return worker;
-    })
+    });
     console.log(`已載入 ${workers.length} 名工人資料。`);
   } else {
     console.log("沒有任何工人資料被載入。");
@@ -25,7 +25,7 @@ export function readWorkersFromDisk() {
 }
 
 export function getWorker(id = 0) {
-  return workers.find((worker) => worker.bio == id);
+  return workers.find((worker) => worker.bio.id == id);
 }
 
 export function getWorkersByManager(mID) {

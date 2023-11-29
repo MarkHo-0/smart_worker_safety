@@ -24,7 +24,7 @@ export class Onlineable extends EventEmitter {
       this.emit(data.e, data.d);
     });
 
-    this.client.once("close", this.offline);
+    this.client.once("close", () => this.offline());
     this.emit("connected");
     return true;
   }

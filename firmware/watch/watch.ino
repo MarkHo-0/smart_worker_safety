@@ -24,10 +24,12 @@ ezButton leftButton(25);
 
 void setup() {
   Serial.setDebugOutput(true);
+  Serial.begin(115200);
+  
 	initScreen();
 
   drawTextOnCenter("Connecting to Wifi...");
-  WiFi.setHostname("SmartWorkerSafety_Watch_1");
+  WiFi.setHostname("SmartWorkerSafety_Watch");
 	WiFi.mode(WIFI_STA);
   WiFi.begin("EasyMode", "EasyMode");
   while (WiFi.status() != WL_CONNECTED) {
@@ -35,7 +37,7 @@ void setup() {
   }
 
   drawTextOnCenter("Searching Server");
-  if ((mdns_init() == ESP_OK && MDNS.queryService("ws", "tcp") > 0 && MDNS.hostname(0) == "sws_s") == false) {
+  if ((mdns_init() == ESP_OK && MDNS.queryService("ws", "tcp") > 0 && MDNS.hostname(0) == "swss") == false) {
     drawTextOnCenter("Server Not Found");
     return;
   } 
@@ -58,10 +60,16 @@ void loop() {
   flashButton.loop(); confirmButton.loop(); rightButton.loop(); leftButton.loop();
 	if(client.available()) client.poll();
 
-  if (confirmButton.isPressed()) Serial.println("confirm");
+  if (confirmButton.isPressed()) {
+    client.close();
+  }
   if (leftButton.isPressed()) Serial.println("left");
   if (rightButton.isPressed()) Serial.println("right"); 
 
+
+}
+
+void scanInternet() {
   if (flashButton.isPressed())
   {
     Serial.println("Scaning Netword...");

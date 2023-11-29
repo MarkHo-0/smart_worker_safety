@@ -1,6 +1,7 @@
 import { IncompleteInteraction } from "../../utils/incomplete_interaction.js";
 import { Onlineable } from "../../utils/onlineable.js";
 import { Worker, WorkerCondition } from "../worker/model.js";
+import { writeManagersToDisk } from "./db.js";
 
 /** @augments Onlineable<Array<Worker>> */
 export class Manager extends Onlineable {
@@ -26,20 +27,20 @@ export class Manager extends Onlineable {
 
       const request = new IncompleteInteraction(
         "request_condition",
-        manager,
+        this,
         targetWorker
       );
       request.setOnComplete((worker_condition) => {
-        manager.send("reply_condition", {
+        this.send("reply_condition", {
           from: targetID,
           condition: worker_condition,
         });
       });
       request.setOnTimeOut(10, () => {
-        manager.send("reply_condition", { from: targetID, condition: null });
+        this.send("reply_condition", { from: targetID, condition: null });
       });
     });
-
+    this.on("update_fcm_token", (token) => this.setFCMtoken(token));
     this.on("connected", () => this.rescheduleUpdateClient());
     this.on("disconnected", () => this.stopUpdateClient());
   }
@@ -62,12 +63,15 @@ export class Manager extends Onlineable {
     const dirtyConditions = this.onlineData
       .filter((w) => w.checkDirtyAndClean())
       .map((w) => ({ id: w.bio.id, c: w.onlineData }));
-    if (dirtyConditions == 0) return;
+    if (dirtyConditions.length == 0) return;
     this.send("workers_condition_updated", dirtyConditions);
   }
 
   setFCMtoken(token) {
+    if (typeof token != "string") return;
+    if (token == this.bio.fcmToken) return;
     this.bio.fcmToken = token;
+    writeManagersToDisk();
   }
 
   pushNotification(data) {}
@@ -81,6 +85,6 @@ export class ManagerBio {
   }
 
   static fromJSON(d) {
-    return new this(d["id"], d["name"], d["null"]);
+    return new this(d["id"], d["name"], d["fcmToken"]);
   }
 }

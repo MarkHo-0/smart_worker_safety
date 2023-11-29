@@ -13,6 +13,9 @@ export class Worker extends Onlineable {
   }
 
   regesterEvents() {
+    this.on("connected", () => (this.isDataDirty = true));
+    this.on("disconnected", () => (this.isDataDirty = true));
+
     this.on("wifi_signal_changed", (data) => {
       const newLocation = wifiSignalData2Location(data);
       if (newLocation == this.onlineData.location) return;
