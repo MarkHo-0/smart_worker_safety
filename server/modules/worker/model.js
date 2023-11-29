@@ -1,5 +1,6 @@
 import { getIncompleteInteraction } from "../../utils/incomplete_interaction.js";
 import { Onlineable } from "../../utils/onlineable.js";
+import { Area, trilateration } from "./wifi_signal.js";
 
 /** @augments Onlineable<WorkerCondition> */
 export class Worker extends Onlineable {
@@ -16,25 +17,7 @@ export class Worker extends Onlineable {
     this.on("connected", () => (this.isDataDirty = true));
     this.on("disconnected", () => (this.isDataDirty = true));
 
-    this.on("wifi_signal_changed", (data) => {
-      const newLocation = wifiSignalData2Location(data);
-      if (newLocation == this.onlineData.location) return;
-      if (this.mayChangeWorkerStatus(newLocation)) {
-        this.onlineData.location = newLocation;
-        this.isDataDirty = true;
-      }
-    });
-
-    this.on("temperature_updated", (data) => {
-      this.onlineData.bodyTemperature = data["body"];
-      this.onlineData.envTemperature = data["env"];
-      this.isDataDirty = true;
-    });
-
-    this.on("helmet_state_updated", (data) => {
-      this.onlineData.withHelmet = Boolean(data["withHelmet"]);
-      this.isDataDirty = true;
-    });
+    this.on("report_sensors_data", (data) => this.processSensorsData(data));
 
     this.on("reply_condition", (data) => {
       const conditionReqeust = getIncompleteInteraction(
@@ -57,17 +40,42 @@ export class Worker extends Onlineable {
     });
   }
 
-  mayChangeWorkerStatus(newLocation) {
-    const isWorking = this.onlineData.status == WorkerStatus.WORKING;
+  processSensorsData(data) {
+    const { body_temp, env_temp, with_helmet, signals } = data;
 
-    if (isWorking == isAtRestingSites(newLocation)) {
-      this.onlineData.status = isWorking
-        ? WorkerStatus.RESTING
-        : WorkerStatus.WORKING;
-      this.onlineData.startTimeMS = new Date().getTime();
-      return true;
+    if (typeof body_temp == "number") {
+      this.onlineData.bodyTemperature = body_temp;
     }
-    return false;
+
+    if (typeof env_temp == "number") {
+      this.onlineData.envTemperature = env_temp;
+    }
+
+    if (typeof with_helmet == "boolean") {
+      this.onlineData.withHelmet = with_helmet;
+    }
+
+    if (Array.isArray(signals)) {
+      const area = trilateration(signals);
+      this.onlineData.location = this.updateStatusFromArea(area);
+    }
+
+    this.isDataDirty = true;
+  }
+
+  updateStatusFromArea(/** @type {Area | null} */ area) {
+    if (area == null) return null;
+
+    const isPreviousResting = this.onlineData.status == WorkerStatus.RESTING;
+
+    if (isPreviousResting && area.isForResting == false) {
+      this.onlineData.startTimeMS = Date.now();
+      this.onlineData.status = WorkerStatus.WORKING;
+    } else if (area.isForResting) {
+      this.onlineData.status = WorkerStatus.RESTING;
+    }
+
+    return area.name;
   }
 
   checkDirtyAndClean() {
